@@ -1,5 +1,5 @@
-import { BaseNode } from '@tracereactive/types';
-import type { InputDefinition, OutputDefinition } from '@tracereactive/types';
+import { BaseNode } from '@gravitydock/types';
+import type { InputDefinition, OutputDefinition } from '@gravitydock/types';
 import { MatrixMathCategory } from '../../category';
 import * as math from 'mathjs';
 

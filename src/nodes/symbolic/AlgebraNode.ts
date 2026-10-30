@@ -1,5 +1,5 @@
-import { BaseNode } from '@tracereactive/types';
-import type { InputDefinition, OutputDefinition, PropertyDefinition } from '@tracereactive/types';
+import { BaseNode } from '@gravitydock/types';
+import type { InputDefinition, OutputDefinition, PropertyDefinition } from '@gravitydock/types';
 import { MathCategory } from '../../category';
 import nerdamer from 'nerdamer-prime';
 import 'nerdamer-prime/Algebra';

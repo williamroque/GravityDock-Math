@@ -19,9 +19,9 @@ import { MatrixMultiplyNode } from './nodes/linear-algebra/MatrixMultiplyNode';
 import { MatrixDotProductNode } from './nodes/linear-algebra/MatrixDotProductNode';
 import { MatrixCrossProductNode } from './nodes/linear-algebra/MatrixCrossProductNode';
 import { UnitConvertNode } from './nodes/units/UnitConvertNode';
-import type { TraceReactiveAPI } from '@tracereactive/types';
+import type { GravityDockAPI } from '@gravitydock/types';
 
-declare const traceReactive: TraceReactiveAPI;
+declare const gravityDock: GravityDockAPI;
 
 const nodes = [
     new MathExpressionNode(),
@@ -60,9 +60,9 @@ const serializableNodes = nodes.map(n => ({
     dynamicOutputs: n.dynamicOutputs
 }));
 
-traceReactive.registerNodes(serializableNodes);
+gravityDock.registerNodes(serializableNodes);
 
-traceReactive.onEvaluateNode(async ({ typeId, inputs, properties }: any) => {
+gravityDock.onEvaluateNode(async ({ typeId, inputs, properties }: any) => {
     const node = nodes.find(n => n.typeId === typeId);
     if (!node) {
         throw new Error(`Unknown node type: ${typeId}`);

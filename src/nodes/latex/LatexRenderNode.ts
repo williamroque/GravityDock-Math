@@ -1,5 +1,5 @@
-import { RenderNode } from '@tracereactive/types';
-import type { InputDefinition, OutputDefinition, PropertyDefinition } from '@tracereactive/types';
+import { RenderNode } from '@gravitydock/types';
+import type { InputDefinition, OutputDefinition, PropertyDefinition } from '@gravitydock/types';
 import { MathCategory } from '../../category';
 
 import { mathjax } from 'mathjax-full/js/mathjax.js';
