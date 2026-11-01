@@ -5,16 +5,23 @@ import { MathCategory } from '../../category';
 import { mathjax } from 'mathjax-full/js/mathjax.js';
 import { TeX } from 'mathjax-full/js/input/tex.js';
 import { SVG } from 'mathjax-full/js/output/svg.js';
-import { browserAdaptor } from 'mathjax-full/js/adaptors/browserAdaptor.js';
+import { liteAdaptor } from 'mathjax-full/js/adaptors/liteAdaptor.js';
 import { RegisterHTMLHandler } from 'mathjax-full/js/handlers/html.js';
 import { AllPackages } from 'mathjax-full/js/input/tex/AllPackages.js';
 
-const adaptor = browserAdaptor();
-RegisterHTMLHandler(adaptor);
+let adaptorInstance: any = null;
+let htmlInstance: any = null;
 
-const texInput = new TeX({ packages: AllPackages });
-const svgOutput = new SVG({ fontCache: 'local' });
-const html = mathjax.document('', { InputJax: texInput, OutputJax: svgOutput });
+function getMathJax() {
+    if (!htmlInstance) {
+        adaptorInstance = liteAdaptor();
+        RegisterHTMLHandler(adaptorInstance as any);
+        const texInput = new TeX({ packages: AllPackages });
+        const svgOutput = new SVG({ fontCache: 'local' });
+        htmlInstance = mathjax.document('', { InputJax: texInput, OutputJax: svgOutput });
+    }
+    return { adaptor: adaptorInstance, html: htmlInstance };
+}
 
 export class LatexRenderNode extends RenderNode {
     readonly typeId = 'math-latex-render';
@@ -63,6 +70,7 @@ export class LatexRenderNode extends RenderNode {
         }
 
         try {
+            const { adaptor, html } = getMathJax();
             const node = html.convert(texString, { display });
             const svgNode = adaptor.firstChild(node);
             
