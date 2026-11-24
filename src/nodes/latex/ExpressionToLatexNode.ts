@@ -3,6 +3,58 @@ import type { InputDefinition, OutputDefinition, PropertyDefinition } from '@gra
 import { MathCategory } from '../../category';
 import * as math from 'mathjs';
 
+function splitEquation(expr: string): string[] {
+    const parts: string[] = [];
+    let start = 0;
+    let quote: string | null = null;
+
+    for (let i = 0; i < expr.length; i++) {
+        const ch = expr[i];
+        if (quote) {
+            if (ch === '\\') {
+                i++;
+            } else if (ch === quote) {
+                quote = null;
+            }
+            continue;
+        }
+        if (ch === '\'' || ch === '\x22') {
+            quote = ch;
+            continue;
+        }
+        if (ch === '=') {
+            const prev = i > 0 ? expr[i - 1] : '';
+            const next = i + 1 < expr.length ? expr[i + 1] : '';
+            if (prev !== '<' && prev !== '>' && prev !== '!' && prev !== '=' && prev !== ':' && next !== '=') {
+                parts.push(expr.slice(start, i));
+                start = i + 1;
+            }
+        }
+    }
+    parts.push(expr.slice(start));
+    return parts;
+}
+
+function exprToTex(expr: string, implicit: string): string {
+    const node = math.parse(expr);
+
+    // mathjs toTex only distinguishes 'hide' (outputs ~) vs everything-else (outputs \cdot).
+    let tex: string;
+    if (implicit === 'cdot') {
+        tex = node.toTex({ implicit: 'show' });
+        tex = tex.replace(/~/g, ' \\cdot ');
+    } else if (implicit === 'space') {
+        tex = node.toTex({ implicit: 'hide' });
+        tex = tex.replace(/~/g, '\\;');
+        tex = tex.replace(/\\cdot/g, '\\;');
+    } else {
+        tex = node.toTex({ implicit: 'hide' });
+        tex = tex.replace(/~/g, '');
+        tex = tex.replace(/\s*\\cdot\s*/g, '');
+    }
+    return tex;
+}
+
 export class ExpressionToLatexNode extends BaseNode {
     readonly typeId = 'math-expression-to-latex';
     readonly displayName = 'Expression to LaTeX';
@@ -33,27 +85,15 @@ export class ExpressionToLatexNode extends BaseNode {
         const implicit = properties['implicit'] || 'hide';
 
         try {
-            const node = math.parse(exprStr);
-
-            // mathjs toTex only distinguishes 'hide' (outputs ~) vs everything-else (outputs \cdot).
-            // For 'hide' and 'space' we start from the 'hide' output and replace the ~ joiners.
-            // For 'cdot' we use 'show' which natively emits \cdot.
             let tex: string;
-            if (implicit === 'cdot') {
-                // Let mathjs render explicit \cdot for all multiplications
-                tex = node.toTex({ implicit: 'show' });
-                // Also replace bare ~ from any remaining implicit nodes
-                tex = tex.replace(/~/g, ' \\cdot ');
-            } else if (implicit === 'space') {
-                tex = node.toTex({ implicit: 'hide' });
-                // Replace ~ hairspace with a medium space, and strip explicit \cdot
-                tex = tex.replace(/~/g, '\\;');
-                tex = tex.replace(/\\cdot/g, '\\;');
-            } else {
-                // 'hide' — strip both ~ and \cdot so terms are adjacent
-                tex = node.toTex({ implicit: 'hide' });
-                tex = tex.replace(/~/g, '');
-                tex = tex.replace(/\s*\\cdot\s*/g, '');
+            try {
+                tex = exprToTex(exprStr, implicit);
+            } catch (parseErr) {
+                const parts = splitEquation(exprStr);
+                if (parts.length <= 1 || parts.some((p) => !p.trim())) {
+                    throw parseErr;
+                }
+                tex = parts.map((p) => exprToTex(p.trim(), implicit)).join('=');
             }
 
             return { 'LaTeX': tex };
